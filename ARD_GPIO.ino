@@ -3,25 +3,28 @@
 #define GC_READY_MASK 0x01
 #define GC_START_MASK 0x01
 
+byte commandByte = 0;
 
 void sendOutputState()
 {
-  byte outputs = 0;
+  byte inputStateMask = 0;
 
   if ( HIGH == read_GCReady()  )
   {
-    outputs |= GC_READY_MASK;
+    inputStateMask |= GC_READY_MASK;
   }
   
-  byte outputMsg[4] = { 's', ((outputs&0xF0)>>4)+'0',((outputs&0xF))+'0', '\n'};    
+  byte outputMsg[6] = { 's', ((commandByte&0xF0)>>4)+'0',((commandByte&0xF))+'0' ,((inputStateMask&0xF0)>>4)+'0',((inputStateMask&0xF))+'0', '\n'};    
 
-  Serial.write(outputMsg,4);
+  Serial.write(outputMsg,6);
 }
 
 TimedAction outputReporter = TimedAction(500,sendOutputState);
 
 void commandReceived(byte cmdByte)
 {
+  commandByte = cmdByte;
+
   if ( cmdByte & GC_START_MASK )
   {
     set_GCStart(HIGH);
